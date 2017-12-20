@@ -8,18 +8,18 @@ import breeze.plot._
 
 class Paper {
     // parameters from paper
+    val generations_in_group = 4; // t
     val growth_rate_cooperative = 0.018;
     val growth_rate_selfish = 0.02;
     val consumption_rate_cooperative = 0.1;
     val consumption_rate_selfish = 0.2;
     val pop_size = 4000;
-    val number_of_generations = 480; //1000; 
+    val number_of_generations = 120 * generations_in_group; // the graphs in the paper seem to only show data from when groups are dispersed into the migrant pool. The graphs go up to 120
     val death_rate = 0.1;
     val n_small = 4;
     val n_big = 40;
-    val r_small = 10;
+    val r_small = 4;
     val r_big = 50;
-    val generations_in_group = 4;
 
     // stores statistics by generation for reproducing paper fig 2
     private val previous_pops = ListBuffer.empty[Population];
@@ -52,7 +52,7 @@ class Paper {
         val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length);
 
         left += plot(x, stats.map(p => p.big / p.total), style = '.', name = "Large Group Size");
-        left += plot(x, stats.map(p => p.selfish_resource_usage), name = "Selfish Resource Usage");
+        left += plot(x, stats.map(p => p.selfish / p.total), name = "Selfish Resource Usage");
 
         right += plot(x, stats.map(p => p.cooperative_small / p.total), name = "Cooperative + Small");
         right += plot(x, stats.map(p => p.cooperative_big / p.total), style = '.', name = "Cooperative + Large");
@@ -136,7 +136,6 @@ class Paper {
         lazy val total = small + big
         lazy val selfish = selfish_small + selfish_big
         lazy val cooperative = cooperative_small + cooperative_big
-        lazy val selfish_resource_usage = (consumption_rate_selfish / (consumption_rate_selfish + consumption_rate_cooperative)) * (selfish / total);
 
         // (new, migrant_pool)
         def random_small(group: Population): (Population, Population) = {
@@ -165,10 +164,10 @@ class Paper {
         def reproduce: Population = {
             val denominator = (cooperative_small * consumption_rate_cooperative * growth_rate_cooperative) + (cooperative_big * consumption_rate_cooperative * growth_rate_cooperative) + (selfish_small * consumption_rate_selfish * growth_rate_selfish) + (selfish_big * consumption_rate_selfish * growth_rate_selfish);
             
-            val new_cooperative_small = cooperative_small * (1 - death_rate + growth_rate_cooperative * r_small / denominator);
-            val new_selfish_small = selfish_small * (1 - death_rate + growth_rate_selfish * r_small / denominator);
-            val new_cooperative_big = cooperative_big * (1 - death_rate + growth_rate_cooperative * r_big / denominator);
-            val new_selfish_big = selfish_big * (1 - death_rate + growth_rate_selfish * r_big / denominator);
+            val new_cooperative_small = cooperative_small * (1 - death_rate + ((growth_rate_cooperative * r_small) / denominator));
+            val new_selfish_small = selfish_small * (1 - death_rate + ((growth_rate_selfish * r_small) / denominator));
+            val new_cooperative_big = cooperative_big * (1 - death_rate + ((growth_rate_cooperative * r_big) / denominator));
+            val new_selfish_big = selfish_big * (1 - death_rate + ((growth_rate_selfish * r_big) / denominator));
 
             new Population(new_cooperative_small, new_cooperative_big, new_selfish_small, new_selfish_big);
         }
