@@ -5,7 +5,7 @@ To build you will need [sbt](http://www.scala-sbt.org).
 
 Build with
 ```
-sbt build
+sbt compile
 ```
 
 Build and run with
