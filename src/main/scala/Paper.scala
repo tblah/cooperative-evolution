@@ -4,7 +4,10 @@ package CooperativeEvolution;
 import scala.collection.AbstractIterable;
 import scala.collection.mutable.ListBuffer;
 import scala.util.Random;
-import breeze.plot._
+import org.sameersingh.scalaplot._
+import org.sameersingh.scalaplot.Implicits._
+import org.sameersingh.scalaplot.jfreegraph._
+import org.sameersingh.scalaplot.gnuplot._
 
 class Paper {
     // parameters from paper
@@ -34,32 +37,35 @@ class Paper {
             groups = assign_to_groups(migrant_pool);
         }
 
+        // draw graph
         val stats = previous_pops.toList;
-        println("stats.length = " + stats.length);
+        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
-        val figure = new Figure("My Implementation of Figure 2", 1, 2);
-        val left = figure.subplot(0);
-        left.xlabel = "Generation"
-        left.ylabel = "Global Frequency"
-        left.legend = true
-        left.ylim(0, 0.8);
-        val right = figure.subplot(1);
-        right.xlabel = "Generation"
-        right.ylabel = "Global Genotype Frequency"
-        right.legend = true
-        right.ylim(0, 1);
+        // left graph
+        val left_data = new XYData();
+        left_data += new MemXYSeries(x, stats.map(p => p.selfish / p.total).toSeq, "Selfish resource usage");
+        left_data += new MemXYSeries(x, stats.map(p => p.big / p.total).toSeq, "Large group size");
 
-        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length);
+        val left_chart = new XYChart("", left_data, x = Axis(label = "Generation"), y = Axis(label = "Global Frequency", range = Some((0.0, 0.8))));
+        left_chart.showLegend = true;
 
-        left += plot(x, stats.map(p => p.big / p.total), style = '.', name = "Large Group Size");
-        left += plot(x, stats.map(p => p.selfish / p.total), name = "Selfish Resource Usage");
+        //val left_plotter = new JFGraphPlotter(left_chart);
+        //left_plotter.gui();
+        GnuplotPlotter.png(left_chart, "./", "left");
 
-        right += plot(x, stats.map(p => p.cooperative_small / p.total), name = "Cooperative + Small");
-        right += plot(x, stats.map(p => p.cooperative_big / p.total), style = '.', name = "Cooperative + Large");
-        right += plot(x, stats.map(p => p.selfish_small / p.total), name = "Selfish + Small");
-        right += plot(x, stats.map(p => p.selfish_big / p.total), style = '.', name = "Selfish + Large");
+        // right graph
+        val right_data = new XYData();
+        right_data += new MemXYSeries(x, stats.map(p => p.cooperative_small / p.total).toSeq, "Cooperative + Small");
+        right_data += new MemXYSeries(x, stats.map(p => p.cooperative_big / p.total).toSeq, "Cooperative + Large");
+        right_data += new MemXYSeries(x, stats.map(p => p.selfish_small / p.total).toSeq, "Selfish + Small");
+        right_data += new MemXYSeries(x, stats.map(p => p.selfish_big / p.total).toSeq, "Selfish + Large");
 
-        figure.saveas("fig2.png");
+        val right_chart = new XYChart("", right_data, x = Axis(label = "Generation"), y = Axis(label = "Global Genotype Frquency", range = Some((0.0, 1.0))));
+        right_chart.showLegend = true;
+
+        //val right_plotter = new JFGraphPlotter(right_chart);
+        //right_plotter.gui();
+        GnuplotPlotter.png(right_chart, "./", "right");
     }
 
     // initialise the migrant pool with pop_size individuals

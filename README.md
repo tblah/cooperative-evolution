@@ -8,6 +8,8 @@ Build with
 sbt compile
 ```
 
+To run you will need [gnuplot](http://gnuplot.info).
+
 Build and run with
 ```
 sbt run

@@ -23,4 +23,5 @@ lazy val root = (project in file(".")).
     "org.scalanlp" %% "breeze-viz" % "0.13.2"
   ),
   resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
+  libraryDependencies += "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4",
   )
