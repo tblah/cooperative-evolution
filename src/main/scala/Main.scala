@@ -1,7 +1,5 @@
 package CooperativeEvolution
 
-import breeze.plot._
-
 object Main extends App {
   println("Cooperative Evolution")
 
