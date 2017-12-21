@@ -1,12 +1,11 @@
 // reimplements https://eprints.soton.ac.uk/264277/
 package CooperativeEvolution;
 
-import scala.collection.AbstractIterable;
 import scala.collection.mutable.ListBuffer;
 import scala.util.Random;
 import org.sameersingh.scalaplot._
 import org.sameersingh.scalaplot.Implicits._
-import org.sameersingh.scalaplot.jfreegraph._
+//import org.sameersingh.scalaplot.jfreegraph._
 import org.sameersingh.scalaplot.gnuplot._
 
 class Paper {
@@ -30,14 +29,20 @@ class Paper {
     // run the simulation and display statistics
     def run: Unit = {
         assert((number_of_generations % generations_in_group) == 0, "N divisible by t");
+
+        // create the initial migrant pool and assign groups
         var groups = assign_to_groups(initialise);
 
+        // for each group lifetime
         for (_ <- 1 to (number_of_generations / generations_in_group)) {
-            val migrant_pool: Population = reproduce_within_groups(groups).rescaled;
+            // reproduce within groups and rescale population
+            val migrant_pool = reproduce_within_groups(groups).rescaled;
+            // assign the new migrant pool into new groups
             groups = assign_to_groups(migrant_pool);
         }
 
-        // draw graph
+        // draw graphs
+
         val stats = previous_pops.toList;
         val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
@@ -77,13 +82,15 @@ class Paper {
     }
 
     // assign individuals from the migrant population to groups
+    // returns each group as a population in an Iterable
     private def assign_to_groups(migrant_pool: Population): Iterable[Population] = {
-        var working_migrant_pool = migrant_pool;
+        var working_migrant_pool = migrant_pool; // scala doesn't let me have mutable function arguments :(
         var ret = ListBuffer.empty[Population];
 
         // small groups
         while ((working_migrant_pool.small >= n_small)) {
             var new_small_group = new Population(0, 0, 0, 0);
+            // fill up the small group with random individuals
             for (_ <- 1 to n_small) {
                 working_migrant_pool.random_small(new_small_group) match {
                     case (a, b) => {
@@ -100,6 +107,7 @@ class Paper {
         // big groups
         while ((working_migrant_pool.big >= n_big)) {
             var new_big_group = new Population(0, 0, 0, 0);
+            // fill up the large group with random individuals
             for (_ <- 1 to n_big) {
                 working_migrant_pool.random_big(new_big_group) match {
                     case (a, b) => {
@@ -118,24 +126,25 @@ class Paper {
 
     // reproduce within groups for generations_in_group timesteps
     private def reproduce_within_groups(groups: Iterable[Population]): Population = {
-        var working_groups = groups;
+        var working_groups = groups; // can't have mutable function arguments
 
         for (_ <- 1 to generations_in_group) {
-            // record statistics
+            // record statistics as a single population consisting of the sumation of all the groups
             previous_pops += working_groups.fold(new Population(0, 0, 0, 0))(_ + _);
 
             // reproduce
-            working_groups = working_groups.map(p => p.reproduce);
+            working_groups = working_groups.map(_.reproduce);
         }
 
+        // return the new migrant pool
         working_groups.fold(new Population(0, 0, 0, 0))(_ + _);
     }
 
-    // class to store representations of populations and subpopulations as frequencies of individuals with each genotype
+    // class to store representations of populations and groups as frequencies of individuals with each genotype
     private class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) {
-        val rand = new Random(/*scala.compat.currentTime*/)
+        val rand = new Random(/*scala.compat.currentTime*/) // todo: random seed
 
-        override def toString: String = "Paper.Population(" + cooperative_small.toString + ", " + cooperative_big.toString + ", " + selfish_small.toString + ", " + selfish_big.toString + ")";
+        override def toString: String = "Population(" + cooperative_small + ", " + cooperative_big + ", " + selfish_small + ", " + selfish_big + ")";
 
         lazy val small = cooperative_small + selfish_small
         lazy val big = cooperative_big + selfish_big
@@ -143,7 +152,8 @@ class Paper {
         lazy val selfish = selfish_small + selfish_big
         lazy val cooperative = cooperative_small + cooperative_big
 
-        // (new, migrant_pool)
+        // removes one individual from the migrant pool and puts it into group
+        // returns (group, migrant_pool)
         def random_small(group: Population): (Population, Population) = {
             val choice = small * rand.nextDouble();
             if (choice > cooperative_small) {
@@ -153,7 +163,8 @@ class Paper {
             }
         }
 
-        // (new, migrant_pool)
+        // works like random_small
+        // (group, migrant_pool)
         def random_big(group: Population): (Population, Population) = {
             val choice = big * rand.nextDouble();
             if (choice > cooperative_big) {
@@ -170,23 +181,19 @@ class Paper {
         def reproduce: Population = {
             val denominator = (cooperative_small * consumption_rate_cooperative * growth_rate_cooperative) + (cooperative_big * consumption_rate_cooperative * growth_rate_cooperative) + (selfish_small * consumption_rate_selfish * growth_rate_selfish) + (selfish_big * consumption_rate_selfish * growth_rate_selfish);
             
-            val new_cooperative_small = cooperative_small * (1 - death_rate + ((growth_rate_cooperative * r_small) / denominator));
-            val new_selfish_small = selfish_small * (1 - death_rate + ((growth_rate_selfish * r_small) / denominator));
-            val new_cooperative_big = cooperative_big * (1 - death_rate + ((growth_rate_cooperative * r_big) / denominator));
-            val new_selfish_big = selfish_big * (1 - death_rate + ((growth_rate_selfish * r_big) / denominator));
+            val new_cooperative_small = cooperative_small * (1 - death_rate + growth_rate_cooperative * r_small / denominator);
+            val new_selfish_small = selfish_small * (1 - death_rate + growth_rate_selfish * r_small / denominator);
+            val new_cooperative_big = cooperative_big * (1 - death_rate + growth_rate_cooperative * r_big / denominator);
+            val new_selfish_big = selfish_big * (1 - death_rate + growth_rate_selfish * r_big / denominator);
 
             new Population(new_cooperative_small, new_cooperative_big, new_selfish_small, new_selfish_big);
         }
 
-        // new Population rescaled back to N individuals
+        // new Population rescaled back to pop_size individuals
         def rescaled: Population = {
-            val sum = total;
-            val factor = sum / pop_size;
+            val factor = total / pop_size;
 
-            val ret = new Population(cooperative_small/factor, cooperative_big/factor, selfish_small/factor, selfish_big/factor);
-
-            //println("Population rescaled from " + sum + " to " + ret.total + ": " + ret.toString);
-            ret
+            new Population(cooperative_small/factor, cooperative_big/factor, selfish_small/factor, selfish_big/factor);
         }
     }
 }

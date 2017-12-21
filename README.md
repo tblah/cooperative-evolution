@@ -14,3 +14,5 @@ Build and run with
 ```
 sbt run
 ```
+
+Generated figures can be found in the current directory (left.png, right.png).
