@@ -8,41 +8,18 @@ import org.sameersingh.scalaplot.Implicits._
 //import org.sameersingh.scalaplot.jfreegraph._
 import org.sameersingh.scalaplot.gnuplot._
 
-class Paper {
+class Paper extends Common {
     // parameters from paper
-    val generations_in_group = 4; // t
     val growth_rate_cooperative = 0.018;
     val growth_rate_selfish = 0.02;
     val consumption_rate_cooperative = 0.1;
     val consumption_rate_selfish = 0.2;
-    val pop_size = 4000;
-    val number_of_generations = 120 * generations_in_group; // the graphs in the paper seem to only show data from when groups are dispersed into the migrant pool. The graphs go up to 120
-    val death_rate = 0.1;
-    val n_small = 4;
-    val n_big = 40;
-    val r_small = 4;
-    val r_big = 50;
 
     // stores statistics by generation for reproducing paper fig 2
-    private val previous_pops = ListBuffer.empty[Population];
+    type PopType = Population;
 
-    // run the simulation and display statistics
-    def run: Unit = {
-        assert((number_of_generations % generations_in_group) == 0, "N divisible by t");
-
-        // create the initial migrant pool and assign groups
-        var groups = assign_to_groups(initialise);
-
-        // for each group lifetime
-        for (_ <- 1 to (number_of_generations / generations_in_group)) {
-            // reproduce within groups and rescale population
-            val migrant_pool = reproduce_within_groups(groups).rescaled;
-            // assign the new migrant pool into new groups
-            groups = assign_to_groups(migrant_pool);
-        }
-
-        // draw graphs
-
+    // draw graphs and save as right.png and left.png
+    def draw_graphs: Unit = {
         val stats = previous_pops.toList;
         val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
@@ -74,7 +51,7 @@ class Paper {
     }
 
     // initialise the migrant pool with pop_size individuals
-    private def initialise(): Population = {
+    protected def initialise: Population = {
         // all 4 genotypes start in equal proportion
         assert((pop_size % 4) == 0, "pop_size divisable by 4");
         val pop_each = pop_size/4;
@@ -83,7 +60,7 @@ class Paper {
 
     // assign individuals from the migrant population to groups
     // returns each group as a population in an Iterable
-    private def assign_to_groups(migrant_pool: Population): Iterable[Population] = {
+    protected def assign_to_groups(migrant_pool: Population): Iterable[Population] = {
         var working_migrant_pool = migrant_pool; // scala doesn't let me have mutable function arguments :(
         var ret = ListBuffer.empty[Population];
 
@@ -124,24 +101,10 @@ class Paper {
         ret.asInstanceOf[Iterable[Population]]
     }
 
-    // reproduce within groups for generations_in_group timesteps
-    private def reproduce_within_groups(groups: Iterable[Population]): Population = {
-        var working_groups = groups; // can't have mutable function arguments
-
-        for (_ <- 1 to generations_in_group) {
-            // record statistics as a single population consisting of the sumation of all the groups
-            previous_pops += working_groups.fold(new Population(0, 0, 0, 0))(_ + _);
-
-            // reproduce
-            working_groups = working_groups.map(_.reproduce);
-        }
-
-        // return the new migrant pool
-        working_groups.fold(new Population(0, 0, 0, 0))(_ + _);
-    }
+    protected def empty_pop = new Population(0, 0, 0, 0);
 
     // class to store representations of populations and groups as frequencies of individuals with each genotype
-    private class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) {
+    protected class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) extends AbstractPopulation {
         val rand = new Random(/*scala.compat.currentTime*/) // todo: random seed
 
         override def toString: String = "Population(" + cooperative_small + ", " + cooperative_big + ", " + selfish_small + ", " + selfish_big + ")";
