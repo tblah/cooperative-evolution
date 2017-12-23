@@ -34,6 +34,9 @@ abstract class Common {
     def itterate: Unit = {
         assert((number_of_generations % generations_in_group) == 0, "N divisible by t");
 
+        // empty stats data if it is not already empty
+        previous_pops.trimStart(previous_pops.length);
+
         // create the initial migrant pool and assign groups
         var groups: Iterable[PopType] = assign_to_groups(initialise);
 

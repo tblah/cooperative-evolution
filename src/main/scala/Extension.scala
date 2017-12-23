@@ -14,7 +14,7 @@ class Extension extends Common {
     val consumption_scaling_factor: Double = 10;
     val std_dev = 0.005;
     val start_growth_rate = 0.019; 
-    //override val number_of_generations = 1000;
+    //override val number_of_generations = 2000;
 
     protected type PopType = Population;
 
@@ -82,16 +82,52 @@ class Extension extends Common {
         def +(other: Population): Population = Population(individuals ++ other.individuals)
     }
 
+    def draw_image_plot(min: Double, max: Double, data: List[Population], title: String) = {
+        val img_scale = breeze.plot.GradientPaintScale(min, max);
+
+        val m = breeze.linalg.DenseMatrix.zeros[Double](data.head.individuals.length, data.length);
+        for (i <- 0 to data.length - 1) {
+            m(::, i) := breeze.linalg.DenseVector(data(i).individuals.map(_.growth_rate).toArray)
+        }
+
+        val fig = new breeze.plot.Figure(title, 1, 1);
+        val sub = fig.subplot(0);
+        sub.xlabel = "Generations";
+        sub.ylabel = "Growth rate allele";
+        sub += breeze.plot.image(m, scale=img_scale);
+    }
+
+    def draw_hists(min: Double, max: Double, pop: Population, title: String) {
+        val fig = new breeze.plot.Figure(title, 3, 1);
+
+        val bigs = fig.subplot(0);
+        bigs.title = "Large groups histogram";
+        bigs += breeze.plot.hist(pop.bigs.individuals.map(_.growth_rate), 100);
+        bigs.xlim(min, max);
+
+        val smalls = fig.subplot(1);
+        smalls.title = "Small groups histogram";
+        smalls += breeze.plot.hist(pop.smalls.individuals.map(_.growth_rate), 100);
+        smalls.xlim(min, max);
+
+        val all = fig.subplot(2);
+        all.title = "All histogram";
+        all += breeze.plot.hist(pop.individuals.map(_.growth_rate), 100);
+        all.xlim(min, max);
+
+        fig.refresh
+    }
+
     // draw graphs and save as right.png and left.png
     def draw_graphs = {
         val stats = previous_pops.toList;
-//        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
         val max_growth = stats.last.individuals.map(_.growth_rate).max;
         val min_growth = stats.last.individuals.map(_.growth_rate).min;
         println(min_growth + " <= growth_rate <= " + max_growth);
 
         // proportion large
+//        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
         /*val prop_large = new XYData();
         prop_large += new MemXYSeries(x, stats.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq, "Large group size");
 
@@ -99,67 +135,12 @@ class Extension extends Common {
         (new JFGraphPlotter(prop_large_chart)).gui();*/
 
         // image plots
-        val img_scale = breeze.plot.GradientPaintScale(min_growth, max_growth);
-        val m = breeze.linalg.DenseMatrix.zeros[Double](pop_size, stats.length); 
-        for (i <- 0 to stats.length - 1) {
-            m(::, i) := breeze.linalg.DenseVector(stats(i).individuals.map(_.growth_rate).toArray)
-        }
-
-        val fig2 = new breeze.plot.Figure("All - Growth rate by generation", 1, 1);
-        val sub = fig2.subplot(0);
-        sub.xlabel = "Generations";
-        sub.ylabel = "Growth rate allele"
-        sub += breeze.plot.image(m, scale=img_scale);
-
-        fig2.saveas("extention-all.png");
-        fig2.refresh
-
-        val m2 = breeze.linalg.DenseMatrix.zeros[Double](pop_size/2, stats.length); 
-        for (i <- 0 to stats.length - 1) {
-            m2(::, i) := breeze.linalg.DenseVector(stats(i).smalls.individuals.map(_.growth_rate).toArray)
-        }
-
-        val fig21 = new breeze.plot.Figure("Small - Growth rate by generation", 1, 1);
-        val sub1 = fig21.subplot(0);
-        sub1.xlabel = "Generations";
-        sub1.ylabel = "Growth rate allele"
-        sub1 += breeze.plot.image(m2, scale=img_scale);
-
-        fig21.saveas("extention-small.png");
-        fig21.refresh
-
-        for (i <- 0 to stats.length - 1) {
-            m2(::, i) := breeze.linalg.DenseVector(stats(i).bigs.individuals.map(_.growth_rate).toArray)
-        }
-
-        val fig22 = new breeze.plot.Figure("Large - Growth rate by generation", 1, 1);
-        val sub2 = fig22.subplot(0);
-        sub2.xlabel = "Generations";
-        sub2.ylabel = "Growth rate allele"
-        sub2 += breeze.plot.image(m2, scale=img_scale);
-
-        fig22.saveas("extention-big.png");
-        fig22.refresh
-
+        draw_image_plot(min_growth, max_growth, stats, "All");
+        draw_image_plot(min_growth, max_growth, stats.map(_.smalls), "Small");
+        draw_image_plot(min_growth, max_growth, stats.map(_.bigs), "Large");
+        
         // histograms
-        val fig3 = new breeze.plot.Figure("Final population histograms", 3, 1);
-
-        val bigs = fig3.subplot(0);
-        bigs.title = "Large groups histogram";
-        bigs += breeze.plot.hist(stats.last.bigs.individuals.map(_.growth_rate), 100);
-        bigs.xlim(min_growth, max_growth);
-
-        val smalls = fig3.subplot(1);
-        smalls.title = "Small groups histogram";
-        smalls += breeze.plot.hist(stats.last.smalls.individuals.map(_.growth_rate), 100);
-        smalls.xlim(min_growth, max_growth);
-
-        val all = fig3.subplot(2);
-        all.title = "All histogram";
-        all += breeze.plot.hist(stats.last.individuals.map(_.growth_rate), 100);
-        all.xlim(min_growth, max_growth);
-
-        fig3.refresh
+        draw_hists(min_growth, max_growth, stats.last, "Final Population");
     }
 
     // return a new empty population

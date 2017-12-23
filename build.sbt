@@ -25,6 +25,6 @@ lazy val root = (project in file(".")).
   resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
   libraryDependencies += "org.sameersingh.scalaplot" % "scalaplot" % "0.0.4",
   // additional heap
-  javaOptions += "-Xmx4G",
+  javaOptions += "-Xmx3G",
   fork := true,
   )
