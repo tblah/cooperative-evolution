@@ -104,8 +104,6 @@ class Paper extends Common {
 
     // class to store representations of populations and groups as frequencies of individuals with each genotype
     protected case class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) extends AbstractPopulation {
-        val rand = new Random(/*scala.compat.currentTime*/) // todo: random seed
-
         override def toString: String = "Population(" + cooperative_small + ", " + cooperative_big + ", " + selfish_small + ", " + selfish_big + ")";
 
         lazy val small = cooperative_small + selfish_small
@@ -117,7 +115,7 @@ class Paper extends Common {
         // removes one individual from the migrant pool and puts it into group
         // returns (group, migrant_pool)
         def random_small(group: Population): (Population, Population) = {
-            val choice = small * rand.nextDouble();
+            val choice = small * Random.nextDouble();
             if (choice > cooperative_small) {
                 (new Population(group.cooperative_small, group.cooperative_big, group.selfish_small + 1, group.selfish_big), new Population(cooperative_small, cooperative_big, selfish_small - 1, selfish_big))
             } else {
@@ -128,7 +126,7 @@ class Paper extends Common {
         // works like random_small
         // (group, migrant_pool)
         def random_big(group: Population): (Population, Population) = {
-            val choice = big * rand.nextDouble();
+            val choice = big * Random.nextDouble();
             if (choice > cooperative_big) {
                 (new Population(group.cooperative_small, group.cooperative_big, group.selfish_small, group.selfish_big + 1), new Population(cooperative_small, cooperative_big, selfish_small, selfish_big - 1))
             } else {

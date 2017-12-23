@@ -18,7 +18,7 @@ abstract class Common {
     protected type PopType <: AbstractPopulation;
     protected val previous_pops = ListBuffer.empty[PopType];
 
-    // class to store representations of populations and groups as frequencies of individuals with each genotype
+    // class to store representations of populations and groups
     protected abstract class AbstractPopulation() {
         // scaled back to pop_size
         def rescaled: PopType; 
