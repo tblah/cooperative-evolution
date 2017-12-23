@@ -79,11 +79,11 @@ class Extension extends Common {
         val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
         // proportion large
-        /*val prop_large = new XYData();
+        val prop_large = new XYData();
         prop_large += new MemXYSeries(x, stats.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq, "Large group size");
 
         val prop_large_chart = new XYChart("Proportion with large group allele", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Frequency"));
-        (new JFGraphPlotter(prop_large_chart)).gui();*/
+        (new JFGraphPlotter(prop_large_chart)).gui();
 
         // image plot
         println("making image plot");
@@ -102,6 +102,22 @@ class Extension extends Common {
         println("about to refresh")
         fig2.saveas("extention-all.png");
         fig2.refresh
+
+        val fig3 = new breeze.plot.Figure("Final population histograms", 1, 3);
+
+        val bigs = fig3.subplot(0);
+        bigs.title = "Large groups histogram";
+        bigs += breeze.plot.hist(stats.last.bigs.individuals.map(_.growth_rate), 100);
+
+        val smalls = fig3.subplot(1);
+        smalls.title = "Small groups histogram";
+        smalls += breeze.plot.hist(stats.last.smalls.individuals.map(_.growth_rate), 100);
+
+        val all = fig3.subplot(2);
+        all.title = "All histogram";
+        all += breeze.plot.hist(stats.last.individuals.map(_.growth_rate), 100);
+
+        fig3.refresh
     }
 
     // return a new empty population
