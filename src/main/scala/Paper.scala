@@ -15,7 +15,6 @@ class Paper extends Common {
     val consumption_rate_cooperative = 0.1;
     val consumption_rate_selfish = 0.2;
 
-    // stores statistics by generation for reproducing paper fig 2
     type PopType = Population;
 
     // draw graphs and save as right.png and left.png
@@ -104,7 +103,7 @@ class Paper extends Common {
     protected def empty_pop = new Population(0, 0, 0, 0);
 
     // class to store representations of populations and groups as frequencies of individuals with each genotype
-    protected class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) extends AbstractPopulation {
+    protected case class Population(val cooperative_small: Double, val cooperative_big: Double, val selfish_small: Double, val selfish_big: Double) extends AbstractPopulation {
         val rand = new Random(/*scala.compat.currentTime*/) // todo: random seed
 
         override def toString: String = "Population(" + cooperative_small + ", " + cooperative_big + ", " + selfish_small + ", " + selfish_big + ")";
