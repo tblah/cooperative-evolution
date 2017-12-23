@@ -1,6 +1,9 @@
 package CooperativeEvolution
 
 object Main extends App {
-  val p = new Paper;
-  p.run;
+  //val paper = new Paper;
+  //paper.run;
+
+  val extension = new Extension;
+  extension.run;
 }

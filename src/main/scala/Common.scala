@@ -16,7 +16,7 @@ abstract class Common {
 
     // stores statistics by generation for reproducing paper fig 2
     protected type PopType <: AbstractPopulation;
-    protected val previous_pops = ListBuffer.empty[PopType];
+    val previous_pops = ListBuffer.empty[PopType];
 
     // class to store representations of populations and groups
     protected abstract class AbstractPopulation() {
