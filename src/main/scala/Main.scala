@@ -58,9 +58,9 @@ object Main extends App {
         growth_graph(avgs, "Average accross " + num_runs + " runs");
 
         println("Histograms");
-        val min1 = avgs.head.individuals.map(_.growth_rate).min
+        /*val min1 = avgs.head.individuals.map(_.growth_rate).min
         val max1 = avgs.head.individuals.map(_.growth_rate).max
-        e.draw_hists(min1, max1, avgs.head, "Original Populatoin Average accross " + num_runs + " runs");
+        e.draw_hists(min1, max1, avgs.head, "Original Populatoin Average accross " + num_runs + " runs");*/
 
         val min = avgs.last.individuals.map(_.growth_rate).min
         val max = avgs.last.individuals.map(_.growth_rate).max

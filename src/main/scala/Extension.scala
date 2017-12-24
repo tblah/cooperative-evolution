@@ -11,8 +11,8 @@ import org.sameersingh.scalaplot.gnuplot._
 
 class Extension extends Common {
     // model parameters
-    val std_dev = 0.005;
-    val start_growth_rate = 0.019; 
+    val std_dev = 0.5;
+    val start_growth_rate = 19; 
     override val number_of_generations = 2000;
     override val pop_size = 1000;
 
@@ -233,8 +233,8 @@ class SqrtExtension extends Extension {
 }
 
 class MultimodalExtension extends Extension {
-    val selfish_start = 0.1;
-    val cooperative_start = 0.01;
+    val selfish_start = 10;
+    val cooperative_start = 1;
 
     // returns initial migrant pool
     override def initialise: Population = {
