@@ -14,8 +14,8 @@ class Extension extends Common {
     val consumption_scaling_factor: Double = 10;
     val std_dev = 0.005;
     val start_growth_rate = 0.019; 
-    override val number_of_generations = 1200;
-    override val pop_size = 1400;
+    override val number_of_generations = 2000;
+    override val pop_size = 1000;
 
     protected type PopType = Population;
 
@@ -138,8 +138,8 @@ class Extension extends Common {
 
         // image plots
         draw_image_plot(min_growth, max_growth, stats, "All");
-        draw_image_plot(min_growth, max_growth, stats.map(_.smalls), "Small");
-        draw_image_plot(min_growth, max_growth, stats.map(_.bigs), "Large");
+        //draw_image_plot(min_growth, max_growth, stats.map(_.smalls), "Small");
+        //draw_image_plot(min_growth, max_growth, stats.map(_.bigs), "Large");
         
         // histograms
         draw_hists(min_growth, max_growth, stats.last, "Final Population");

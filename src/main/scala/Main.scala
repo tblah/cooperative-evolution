@@ -13,9 +13,11 @@ object Main extends App {
         val e = new Extension;
 
         def xy(data: immutable.IndexedSeq[immutable.IndexedSeq[Double]], title: String): MemXYSeries = {
+            println("Averaging")
             val avgs = data.map((v: immutable.IndexedSeq[Double]) => v.fold(0.0)(_ + _) / v.length);
             val x = breeze.linalg.linspace(0.0, e.number_of_generations, avgs.length).toArray.toSeq;
 
+            println("MemXYSeries")
             new MemXYSeries(x, avgs.toSeq, title);
         }
 
@@ -26,6 +28,7 @@ object Main extends App {
             xydata += xy(data.map(_.bigs.individuals.map(_.growth_rate)), "Large Groups");
             xydata += xy(data.map(_.smalls.individuals.map(_.growth_rate)), "Small Groups");
             
+            println("Plotting");
             val chart = new XYChart(title, xydata, x = Axis(label = "Generation"), y = Axis(label = "Average Growth Rate"));
             chart.showLegend = true;
 
@@ -38,7 +41,7 @@ object Main extends App {
         e.itterate;
         results += e.previous_pops.toIndexedSeq;
         //e.draw_graphs;
-        growth_graph(results.head, "First run");
+        //growth_graph(results.head, "First run");
 
         println("Calculating more results...");
 
@@ -50,8 +53,15 @@ object Main extends App {
         }
 
         // average results
+        println("joining populations...")
         val avgs = results.transpose.map(l => l.fold(e.empty_pop)(_ + _)).toIndexedSeq;
+
         growth_graph(avgs, "Average accross " + num_runs + " runs");
+
+        println("Histogram");
+        val min = avgs.last.individuals.map(_.growth_rate).min
+        val max = avgs.last.individuals.map(_.growth_rate).max
+        e.draw_hists(min, max, avgs.last, "Average accross " + num_runs + " runs");
         println("Done");
     }
 
