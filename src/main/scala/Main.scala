@@ -10,7 +10,7 @@ import org.sameersingh.scalaplot.gnuplot._
 object Main extends App {
     def extension_avg = {
         val num_runs = 15;
-        val e = new Extension;
+        val e = new SqrtExtension;
 
         def xy(data: immutable.IndexedSeq[immutable.IndexedSeq[Double]], title: String): MemXYSeries = {
             println("Averaging")

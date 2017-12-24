@@ -11,7 +11,6 @@ import org.sameersingh.scalaplot.gnuplot._
 
 class Extension extends Common {
     // model parameters
-    val consumption_scaling_factor: Double = 10;
     val std_dev = 0.005;
     val start_growth_rate = 0.019; 
     override val number_of_generations = 2000;
@@ -35,6 +34,40 @@ class Extension extends Common {
         }
     }
 
+    // moved out of population so we can override it
+    // reproduce for one generation
+    protected def p_reproduce(p: Population): Population = {
+        val denominator = p.individuals.map(i => i.growth_rate * i.growth_rate).fold(0: Double)(_ + _);
+        val relative_fitnesses = p.individuals.map(i => {
+            val r = if (i.prefers_small) r_small else r_big;
+            /*1 - death_rate +*/ i.growth_rate * r / denominator
+        });
+        val fitness_scaling_factor = relative_fitnesses.fold(0: Double)(_ + _);
+        val reproduction_probability = relative_fitnesses.map(_ / fitness_scaling_factor);
+        val combined = p.individuals zip reproduction_probability;
+
+        val new_pop = ArrayBuffer.empty[Individual];
+
+        // fitness proportional selection
+        for (_ <- 1 to combined.length) { // select combined.length individuals
+            val choice = Random.nextDouble();
+            var total: Double = 0;
+            var chosen_one: Option[Individual] = None;
+
+            for (i <- combined) {
+                if (chosen_one == None)
+                total += i._2;               
+                if (total >= choice) {
+                    chosen_one = Some(i._1);
+                }
+            }
+
+            new_pop += chosen_one.get.mutate;
+        }
+
+        Population(new_pop.toIndexedSeq)
+    }
+
     // class to store representations of populations and groups
     case class Population(val individuals: scala.collection.immutable.IndexedSeq[Individual]) extends AbstractPopulation {
         // not applicable to this population model because rescaling is done during reproduction
@@ -46,38 +79,7 @@ class Extension extends Common {
         // population with only the large members
         lazy val bigs = Population(individuals.filter({case Individual(s, _) => !s}));
 
-        // reproduce for one generation
-        def reproduce: Population = {
-            val denominator = individuals.map(i => i.growth_rate * i.growth_rate * consumption_scaling_factor).fold(0: Double)(_ + _);
-            val relative_fitnesses = individuals.map(i => {
-                val r = if (i.prefers_small) r_small else r_big;
-                /*1 - death_rate +*/ i.growth_rate * r / denominator
-            });
-            val fitness_scaling_factor = relative_fitnesses.fold(0: Double)(_ + _);
-            val reproduction_probability = relative_fitnesses.map(_ / fitness_scaling_factor);
-            val combined = individuals zip reproduction_probability;
-
-            val new_pop = ArrayBuffer.empty[Individual];
-
-            // fitness proportional selection
-            for (_ <- 1 to combined.length) { // select combined.length individuals
-                val choice = Random.nextDouble();
-                var total: Double = 0;
-                var chosen_one: Option[Individual] = None;
-
-                for (i <- combined) {
-                    if (chosen_one == None)
-                    total += i._2;               
-                    if (total >= choice) {
-                        chosen_one = Some(i._1);
-                    }
-                }
-
-                new_pop += chosen_one.get.mutate;
-            }
-
-            Population(new_pop.toIndexedSeq)
-        }
+        def reproduce = p_reproduce(this); 
         
         // union
         def +(other: Population): Population = Population(individuals ++ other.individuals)
@@ -158,22 +160,22 @@ class Extension extends Common {
 
         // small individuals
         for (_ <- 1 to size) {
-            /*var sample = dist.sample;
+            var sample = dist.sample;
             while (sample < 0) {
                 sample = dist.sample;
             }
-            new_pop += new Individual(true, sample);*/
-            new_pop += new Individual(true, start_growth_rate);
+            new_pop += new Individual(true, sample);
+            //new_pop += new Individual(true, start_growth_rate);
         }
 
         // large individuals
         for (_ <- 1 to size) {
-            /*var sample = dist.sample;
+            var sample = dist.sample;
             while (sample < 0) {
                 sample = dist.sample;
             }
-            new_pop += new Individual(false, sample);*/
-            new_pop += new Individual(false, start_growth_rate);
+            new_pop += new Individual(false, sample);
+            //new_pop += new Individual(false, start_growth_rate);
         }
 
         new Population(new_pop.toIndexedSeq)
@@ -196,3 +198,36 @@ class Extension extends Common {
     }
 }
 
+class SqrtExtension extends Extension {
+    override protected def p_reproduce(p: Population): Population = {
+        val denominator = p.individuals.map(i => i.growth_rate * scala.math.sqrt(i.growth_rate)).fold(0: Double)(_ + _);
+        val relative_fitnesses = p.individuals.map(i => {
+            val r = if (i.prefers_small) r_small else r_big;
+            /*1 - death_rate +*/ i.growth_rate * r / denominator
+        });
+        val fitness_scaling_factor = relative_fitnesses.fold(0: Double)(_ + _);
+        val reproduction_probability = relative_fitnesses.map(_ / fitness_scaling_factor);
+        val combined = p.individuals zip reproduction_probability;
+
+        val new_pop = ArrayBuffer.empty[Individual];
+
+        // fitness proportional selection
+        for (_ <- 1 to combined.length) { // select combined.length individuals
+            val choice = Random.nextDouble();
+            var total: Double = 0;
+            var chosen_one: Option[Individual] = None;
+
+            for (i <- combined) {
+                if (chosen_one == None)
+                total += i._2;               
+                if (total >= choice) {
+                    chosen_one = Some(i._1);
+                }
+            }
+
+            new_pop += chosen_one.get.mutate;
+        }
+
+        Population(new_pop.toIndexedSeq)
+    }
+}
