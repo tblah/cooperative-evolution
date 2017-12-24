@@ -144,7 +144,7 @@ class Extension extends Common {
         //draw_image_plot(min_growth, max_growth, stats.map(_.bigs), "Large");
         
         // histograms
-        draw_hists(min_growth, max_growth, stats.last, "Final Population");
+        //draw_hists(min_growth, max_growth, stats.last, "Final Population");
     }
 
     // return a new empty population
@@ -229,5 +229,36 @@ class SqrtExtension extends Extension {
         }
 
         Population(new_pop.toIndexedSeq)
+    }
+}
+
+class MultimodalExtension extends Extension {
+    val selfish_start = 0.1;
+    val cooperative_start = 0.01;
+
+    // returns initial migrant pool
+    override def initialise: Population = {
+        assert((pop_size % 4) == 0);
+        val size = pop_size / 4;
+
+        val new_pop = ArrayBuffer.empty[Individual];
+
+        def make_individuals(small: Boolean, mean: Double) {
+            val dist = breeze.stats.distributions.Gaussian(mean, std_dev);
+            for (_ <- 1 to size) {
+                var sample = dist.sample;
+                while (sample < 0) {
+                    sample = dist.sample;
+                }
+                new_pop += new Individual(small, sample);
+            }
+        }
+
+        make_individuals(true, selfish_start);
+        make_individuals(true, cooperative_start);
+        make_individuals(false, selfish_start);
+        make_individuals(false, cooperative_start);
+
+        new Population(new_pop.toIndexedSeq)
     }
 }
