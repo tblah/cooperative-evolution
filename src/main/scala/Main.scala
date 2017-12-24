@@ -24,8 +24,8 @@ object Main extends App {
         def growth_graph(data: immutable.IndexedSeq[e.Population], title: String) = {
             val xydata = new XYData();
             xydata += xy(data.map(_.individuals.map(_.growth_rate)), "All");
-            xydata += xy(data.map(_.bigs.individuals.map(_.growth_rate)), "Large Groups");
-            xydata += xy(data.map(_.smalls.individuals.map(_.growth_rate)), "Small Groups");
+            //xydata += xy(data.map(_.bigs.individuals.map(_.growth_rate)), "Large Groups");
+            //xydata += xy(data.map(_.smalls.individuals.map(_.growth_rate)), "Small Groups");
             
             println("Plotting");
             val chart = new XYChart(title, xydata, x = Axis(label = "Generation"), y = Axis(label = "Average Growth Rate"));
@@ -50,6 +50,8 @@ object Main extends App {
             e.itterate
             results += e.previous_pops.toIndexedSeq
         }
+
+        e.draw_prop_large(results);
 
         // average results
         println("joining populations...")

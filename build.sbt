@@ -28,5 +28,5 @@ lazy val root = (project in file(".")).
   javaOptions += "-Xmx3G",
   fork := true,
   // optimisation and warnings
-  scalacOptions := Seq("-deprecation", "-feature", "-g:none", "-optimise")
+  scalacOptions := Seq("-deprecation", "-feature", "-optimise")
   )
