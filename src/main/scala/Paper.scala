@@ -1,7 +1,6 @@
 // reimplements https://eprints.soton.ac.uk/264277/
 package CooperativeEvolution;
 
-import scala.collection.mutable.ListBuffer;
 import scala.util.Random;
 import org.sameersingh.scalaplot._
 import org.sameersingh.scalaplot.Implicits._
@@ -19,7 +18,7 @@ class Paper extends Common {
 
     // draw graphs and save as right.png and left.png
     def draw_graphs: Unit = {
-        val stats = previous_pops.toList;
+        val stats = previous_pops.asInstanceOf[scala.collection.immutable.LinearSeq[Population]];
         val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
 
         // left graph
@@ -61,7 +60,7 @@ class Paper extends Common {
     // returns each group as a population in an Iterable
     protected def assign_to_groups(migrant_pool: Population): Iterable[Population] = {
         var working_migrant_pool = migrant_pool; // scala doesn't let me have mutable function arguments :(
-        var ret = ListBuffer.empty[Population];
+        var ret = scala.collection.mutable.ArrayBuffer.empty[Population];
 
         // small groups
         while ((working_migrant_pool.small >= n_small)) {

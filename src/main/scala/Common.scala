@@ -1,7 +1,7 @@
 // reimplements https://eprints.soton.ac.uk/264277/
 package CooperativeEvolution;
 
-import scala.collection.mutable.ListBuffer;
+import scala.collection.mutable.ArrayBuffer;
 
 abstract class Common {
     // parameters from paper
@@ -16,7 +16,7 @@ abstract class Common {
 
     // stores statistics by generation for reproducing paper fig 2
     protected type PopType <: AbstractPopulation;
-    val previous_pops = ListBuffer.empty[PopType];
+    val previous_pops = ArrayBuffer.empty[PopType];
 
     // class to store representations of populations and groups
     protected abstract class AbstractPopulation() {

@@ -1,8 +1,8 @@
 // extends https://eprints.soton.ac.uk/264277/
 package CooperativeEvolution;
 
-import scala.collection.mutable.ListBuffer;
 import scala.util.Random;
+import scala.collection.mutable.ArrayBuffer;
 
 import org.sameersingh.scalaplot._
 import org.sameersingh.scalaplot.Implicits._
@@ -14,7 +14,8 @@ class Extension extends Common {
     val consumption_scaling_factor: Double = 10;
     val std_dev = 0.005;
     val start_growth_rate = 0.019; 
-    //override val number_of_generations = 2000;
+    override val number_of_generations = 1200;
+    override val pop_size = 1400;
 
     protected type PopType = Population;
 
@@ -35,7 +36,7 @@ class Extension extends Common {
     }
 
     // class to store representations of populations and groups
-    case class Population(val individuals: List[Individual]) extends AbstractPopulation {
+    case class Population(val individuals: scala.collection.immutable.IndexedSeq[Individual]) extends AbstractPopulation {
         // not applicable to this population model because rescaling is done during reproduction
         def rescaled: Population = this;
 
@@ -56,7 +57,7 @@ class Extension extends Common {
             val reproduction_probability = relative_fitnesses.map(_ / fitness_scaling_factor);
             val combined = individuals zip reproduction_probability;
 
-            val new_pop = ListBuffer.empty[Individual];
+            val new_pop = ArrayBuffer.empty[Individual];
 
             // fitness proportional selection
             for (_ <- 1 to combined.length) { // select combined.length individuals
@@ -75,7 +76,7 @@ class Extension extends Common {
                 new_pop += chosen_one.get.mutate;
             }
 
-            Population(new_pop.toList)
+            Population(new_pop.toIndexedSeq)
         }
         
         // union
@@ -118,6 +119,15 @@ class Extension extends Common {
         fig.refresh
     }
 
+    def draw_prop_large = {
+        val x = breeze.linalg.linspace(0.0, number_of_generations, previous_pops.length).toArray.toSeq;
+        val prop_large = new XYData();
+        prop_large += new MemXYSeries(x, previous_pops.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq, "Large group size");
+
+        val prop_large_chart = new XYChart("Proportion with large group allele", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Frequency"));
+        (new JFGraphPlotter(prop_large_chart)).gui();
+    }
+
     // draw graphs and save as right.png and left.png
     def draw_graphs = {
         val stats = previous_pops.toList;
@@ -125,14 +135,6 @@ class Extension extends Common {
         val max_growth = stats.last.individuals.map(_.growth_rate).max;
         val min_growth = stats.last.individuals.map(_.growth_rate).min;
         println(min_growth + " <= growth_rate <= " + max_growth);
-
-        // proportion large
-//        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
-        /*val prop_large = new XYData();
-        prop_large += new MemXYSeries(x, stats.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq, "Large group size");
-
-        val prop_large_chart = new XYChart("Proportion with large group allele", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Frequency"));
-        (new JFGraphPlotter(prop_large_chart)).gui();*/
 
         // image plots
         draw_image_plot(min_growth, max_growth, stats, "All");
@@ -144,7 +146,7 @@ class Extension extends Common {
     }
 
     // return a new empty population
-    def empty_pop: Population = Population(List()); 
+    def empty_pop: Population = Population(scala.collection.immutable.IndexedSeq()); 
 
     // returns initial migrant pool
     def initialise: Population = {
@@ -152,7 +154,7 @@ class Extension extends Common {
         val size = pop_size / 2;
         val dist = breeze.stats.distributions.Gaussian(start_growth_rate, std_dev);
 
-        val new_pop = ListBuffer.empty[Individual];
+        val new_pop = ArrayBuffer.empty[Individual];
 
         // small individuals
         for (_ <- 1 to size) {
@@ -174,13 +176,13 @@ class Extension extends Common {
             new_pop += new Individual(false, start_growth_rate);
         }
 
-        new Population(new_pop.toList)
+        new Population(new_pop.toIndexedSeq)
     } 
 
     // assign individuals from the migrant population to groups
     // returns each group as a population in an Iterable
     def assign_to_groups(migrant_pool: Population): Iterable[Population] = {
-        val groups = ListBuffer.empty[Population];
+        val groups = ArrayBuffer.empty[Population];
 
         // shuffles migrant_pool.smalls and then groups it into groups of size n_small
         val small_groups = Random.shuffle(migrant_pool.smalls.individuals).grouped(n_small);
