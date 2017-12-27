@@ -35,9 +35,22 @@ object Main extends App {
             GnuplotPlotter.png(chart, "./", "growth-rates");
         }
 
+        def draw_prop_large(data: IndexedSeq[IndexedSeq[e.Population]]) = {
+            val x = breeze.linalg.linspace(0.0, e.number_of_generations, data.head.length).toArray.toSeq;
+            val prop_large = new XYData();
+    
+            for (i <- data) {
+                prop_large += new MemXYSeries(x, i.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq);
+            }
+    
+            val prop_large_chart = new XYChart("", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Proportion of individuals prefering a large group"));
+            //(new JFGraphPlotter(prop_large_chart)).gui();
+            GnuplotPlotter.png(prop_large_chart, "./", "prop-large");
+        }
+
         val results = mutable.ArrayBuffer.empty[immutable.IndexedSeq[e.Population]];
 
-        // do first resutls separately
+        // do first run separately
         e.itterate;
         results += e.previous_pops.toIndexedSeq;
         //e.draw_graphs;
@@ -52,7 +65,7 @@ object Main extends App {
             results += e.previous_pops.toIndexedSeq
         }
 
-        e.draw_prop_large(results);
+        draw_prop_large(results);
 
         // average results
         println("joining populations...")

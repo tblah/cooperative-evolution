@@ -1,8 +1,9 @@
-// reimplements https://eprints.soton.ac.uk/264277/
+// stuff common to both Paper.scala and Extension.scala
 package CooperativeEvolution;
 
 import scala.collection.mutable.ArrayBuffer;
 
+// stuff common to Paper and Extension
 abstract class Common {
     // parameters from paper
     val generations_in_group = 4; // t
@@ -14,8 +15,9 @@ abstract class Common {
     val r_small = 4;
     val r_big = 50;
 
-    // stores statistics by generation for reproducing paper fig 2
     protected type PopType <: AbstractPopulation;
+
+    // stores statistics by generation for reproducing paper fig 2
     val previous_pops = ArrayBuffer.empty[PopType];
 
     // class to store representations of populations and groups
@@ -84,4 +86,3 @@ abstract class Common {
     // returns each group as a population in an Iterable
     protected def assign_to_groups(migrant_pool: PopType): Iterable[PopType];
 }
-
