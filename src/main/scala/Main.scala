@@ -9,7 +9,7 @@ import org.sameersingh.scalaplot.gnuplot._
 
 object Main extends App {
     def extension_avg = {
-        val num_runs = 15;
+        val num_runs = 20;
         val e = new MultimodalExtension;
 
         def xy(data: immutable.IndexedSeq[immutable.IndexedSeq[Double]], title: String): MemXYSeries = {
@@ -24,14 +24,15 @@ object Main extends App {
         def growth_graph(data: immutable.IndexedSeq[e.Population], title: String) = {
             val xydata = new XYData();
             xydata += xy(data.map(_.individuals.map(_.growth_rate)), "All");
-            //xydata += xy(data.map(_.bigs.individuals.map(_.growth_rate)), "Large Groups");
-            //xydata += xy(data.map(_.smalls.individuals.map(_.growth_rate)), "Small Groups");
+            xydata += xy(data.map(_.bigs.individuals.map(_.growth_rate)), "Large Groups");
+            xydata += xy(data.map(_.smalls.individuals.map(_.growth_rate)), "Small Groups");
             
             println("Plotting");
             val chart = new XYChart(title, xydata, x = Axis(label = "Generation"), y = Axis(label = "Average Growth Rate"));
             chart.showLegend = true;
 
-            (new JFGraphPlotter(chart)).gui();
+            //(new JFGraphPlotter(chart)).gui();
+            GnuplotPlotter.png(chart, "./", "growth-rates");
         }
 
         val results = mutable.ArrayBuffer.empty[immutable.IndexedSeq[e.Population]];
@@ -39,7 +40,7 @@ object Main extends App {
         // do first resutls separately
         e.itterate;
         results += e.previous_pops.toIndexedSeq;
-        e.draw_graphs;
+        //e.draw_graphs;
         //growth_graph(results.head, "First run");
 
         println("Calculating more results...");
@@ -60,20 +61,13 @@ object Main extends App {
         growth_graph(avgs, "Average accross " + num_runs + " runs");
 
         println("Histograms");
-        /*val min1 = avgs.head.individuals.map(_.growth_rate).min
-        val max1 = avgs.head.individuals.map(_.growth_rate).max
-        e.draw_hists(min1, max1, avgs.head, "Original Populatoin Average accross " + num_runs + " runs");*/
-
         val min = avgs.last.individuals.map(_.growth_rate).min
         val max = avgs.last.individuals.map(_.growth_rate).max
         e.draw_hists(min, max, avgs.last, "Final Population Average accross " + num_runs + " runs");
         println("Done");
     }
 
-    //val paper = new Paper;
-    //paper.run;
-
-    //val extension = new Extension;
-    //extension.run;
+    
+    (new Paper).run;
     extension_avg
 }

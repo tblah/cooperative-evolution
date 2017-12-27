@@ -18,13 +18,12 @@ class Paper extends Common {
 
     // draw graphs and save as right.png and left.png
     def draw_graphs: Unit = {
-        val stats = previous_pops.asInstanceOf[scala.collection.immutable.LinearSeq[Population]];
-        val x = breeze.linalg.linspace(0.0, number_of_generations, stats.length).toArray.toSeq;
+        val x = breeze.linalg.linspace(0.0, number_of_generations, previous_pops.length).toArray.toSeq;
 
         // left graph
         val left_data = new XYData();
-        left_data += new MemXYSeries(x, stats.map(p => p.selfish / p.total).toSeq, "Selfish resource usage");
-        left_data += new MemXYSeries(x, stats.map(p => p.big / p.total).toSeq, "Large group size");
+        left_data += new MemXYSeries(x, previous_pops.map(p => p.selfish / p.total).toSeq, "Selfish resource usage");
+        left_data += new MemXYSeries(x, previous_pops.map(p => p.big / p.total).toSeq, "Large group size");
 
         val left_chart = new XYChart("", left_data, x = Axis(label = "Generation"), y = Axis(label = "Global Frequency", range = Some((0.0, 0.8))));
         left_chart.showLegend = true;
@@ -35,10 +34,10 @@ class Paper extends Common {
 
         // right graph
         val right_data = new XYData();
-        right_data += new MemXYSeries(x, stats.map(p => p.cooperative_small / p.total).toSeq, "Cooperative + Small");
-        right_data += new MemXYSeries(x, stats.map(p => p.cooperative_big / p.total).toSeq, "Cooperative + Large");
-        right_data += new MemXYSeries(x, stats.map(p => p.selfish_small / p.total).toSeq, "Selfish + Small");
-        right_data += new MemXYSeries(x, stats.map(p => p.selfish_big / p.total).toSeq, "Selfish + Large");
+        right_data += new MemXYSeries(x, previous_pops.map(p => p.cooperative_small / p.total).toSeq, "Cooperative + Small");
+        right_data += new MemXYSeries(x, previous_pops.map(p => p.cooperative_big / p.total).toSeq, "Cooperative + Large");
+        right_data += new MemXYSeries(x, previous_pops.map(p => p.selfish_small / p.total).toSeq, "Selfish + Small");
+        right_data += new MemXYSeries(x, previous_pops.map(p => p.selfish_big / p.total).toSeq, "Selfish + Large");
 
         val right_chart = new XYChart("", right_data, x = Axis(label = "Generation"), y = Axis(label = "Global Genotype Frquency", range = Some((0.0, 1.0))));
         right_chart.showLegend = true;

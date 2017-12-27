@@ -13,7 +13,7 @@ class Extension extends Common {
     // model parameters
     val std_dev = 0.5;
     val start_growth_rate = 19; 
-    override val number_of_generations = 2000;
+    override val number_of_generations = 1000;
     override val n_small = 2;
     override val pop_size = 1000;
     override val r_big = 100;
@@ -100,7 +100,7 @@ class Extension extends Common {
         val fig = new breeze.plot.Figure(title, 1, 1);
         val sub = fig.subplot(0);
         sub.xlabel = "Generations";
-        sub.ylabel = "Growth rate allele";
+        sub.ylabel = "Population";
         sub += breeze.plot.image(m, scale=img_scale);
     }
 
@@ -112,7 +112,9 @@ class Extension extends Common {
 
         if (smalls_data.length != 0) {
             val smalls = fig.subplot(1);
-            smalls.title = "Small groups histogram";
+            smalls.title = "Small Groups";
+            smalls.xlabel = "Growth Rate"
+            smalls.ylabel = "Frequency"
             smalls += breeze.plot.hist(smalls_data, 100);
             smalls.xlim(min, max);
         }
@@ -120,16 +122,21 @@ class Extension extends Common {
         if (bigs_data.length != 0) {
             val bigs = fig.subplot(2);
             bigs.title = "Large groups histogram";
+            bigs.xlabel = "Growth Rate"
+            bigs.ylabel = "Frequency"
             bigs += breeze.plot.hist(pop.bigs.individuals.map(_.growth_rate), 100);
             bigs.xlim(min, max);
         } 
 
         val all = fig.subplot(0);
         all.title = "All histogram";
+        all.xlabel = "Growth Rate"
+        all.ylabel = "Frequency"
         all += breeze.plot.hist(pop.individuals.map(_.growth_rate), 100);
         all.xlim(min, max);
 
         fig.refresh
+        fig.saveas("./hists.png")
     }
 
     def draw_prop_large(data: IndexedSeq[IndexedSeq[Population]]) = {
@@ -137,11 +144,12 @@ class Extension extends Common {
         val prop_large = new XYData();
 
         for (i <- data) {
-            prop_large += new MemXYSeries(x, i.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq, "Large group size");
+            prop_large += new MemXYSeries(x, i.map(p => p.bigs.individuals.length.toDouble / p.individuals.length.toDouble).toSeq);
         }
 
-        val prop_large_chart = new XYChart("Proportion with large group allele", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Frequency"));
-        (new JFGraphPlotter(prop_large_chart)).gui();
+        val prop_large_chart = new XYChart("Proportion with large group allele", prop_large, x = Axis(label = "Generation"), y = Axis(label = "Proportion of individuals prefering a large group"));
+        //(new JFGraphPlotter(prop_large_chart)).gui();
+        GnuplotPlotter.png(prop_large_chart, "./", "prop-large");
     }
 
     // draw graphs and save as right.png and left.png
@@ -151,7 +159,7 @@ class Extension extends Common {
         println(min_growth + " <= growth_rate <= " + max_growth);
 
         // image plots
-        draw_image_plot(min_growth, max_growth, previous_pops, "All");
+        draw_image_plot(min_growth, max_growth, previous_pops, "Growth Rate Locus Evolution");
         //draw_image_plot(min_growth, max_growth, stats.map(_.smalls), "Small");
         //draw_image_plot(min_growth, max_growth, stats.map(_.bigs), "Large");
         
